@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	
+	<redis>
+		<server>192.168.0.171</server>
+		<port>6379</port>
+	</redis>
+	
+	<logPath>C:/crh/work/Log</logPath>
+	
+	<http>
+		<server>localhost</server>
+		<port>8052</port>
+	</http>
+	
+	<sphinx>
+		<server>192.168.0.171</server>
+		<port>9412</port>
+		<portYpmcDisease>9512</portYpmcDisease>
+	</sphinx>
+	
+	<param>
+		<sphinx_max_query>50</sphinx_max_query>
+		<sphinx_timeout>20000</sphinx_timeout>
+		<sphinx_ypsl>100</sphinx_ypsl>
+		<ypsl>20</ypsl>
+		<ypmc_disease_rank>30</ypmc_disease_rank>
+	</param>
+</configuration>

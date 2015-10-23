@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 用来配置不同的配置环境环境 -->
+<configuration>
+	<!-- 默认配置文件 -->
+	<default>
+		<!-- 配置文件的名称 -->
+		<conf>DevSinglePC</conf>
+		<description><![CDATA[开发环境单机运行，默认配置文件]]></description>
+	</default>
+	
+	<selector active="true">
+		<conditions>
+			<envCond>
+				<key>MR_ENV</key>
+				<value>TRUE</value>
+			</envCond>
+		</conditions>
+		<conf>ALPHA_TEST</conf>
+		<description><![CDATA[内网测试]]></description>
+	</selector>
+
+	<selector active="true">
+		<conditions>
+			<envCond>
+				<key>MR_ENV</key>
+				<value>ShiDao</value>
+			</envCond>
+		</conditions>
+		<conf>ProductEnv</conf>
+		<description><![CDATA[世导机房部署]]></description>
+	</selector>
+</configuration>
