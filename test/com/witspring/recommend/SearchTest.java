@@ -1,4 +1,4 @@
-package org.witspring.recommend;
+package com.witspring.recommend;
 
 import java.io.File;
 import java.util.ArrayList;
