@@ -1,4 +1,4 @@
-package com.witspring.recommend;
+package org.witspring.recommend;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -13,6 +13,9 @@ import org.apache.http.message.BasicNameValuePair;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.witspring.http.HttpClientCommon;
+import com.witspring.http.HttpClientUtils;
+import com.witspring.recommend.MRecommendCost;
 import com.witspring.util.IOUtil;
 
 public class SearchTest {
@@ -63,7 +66,7 @@ public class SearchTest {
 		SearchTest search = new SearchTest();
 		long start = System.currentTimeMillis();
 		
-		String icd_name = "烧伤";
+		String icd_name = "高血压";
 //		icd_name = "沙眼";
 //		icd_name = "高血压";
 		//icd_name = "高血压";

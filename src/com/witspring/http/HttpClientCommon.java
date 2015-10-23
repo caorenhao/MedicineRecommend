@@ -1,4 +1,4 @@
-package com.witspring.recommend;
+package com.witspring.http;
 
 import java.io.BufferedReader;
 import java.io.IOException;
