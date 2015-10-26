@@ -15,6 +15,7 @@ public class MRecommendConfig extends JDomConfig {
 	public static class RedisConf {
 		public String server;
 		public int port;
+		public int maxSize;
 		/**
 		 * 解析方法.
 		 *
@@ -25,6 +26,7 @@ public class MRecommendConfig extends JDomConfig {
 			Element rdEle = rootEle;
 			server = rdEle.getChildText("server");
 			port = Integer.parseInt(rdEle.getChildText("port"));
+			maxSize = Integer.parseInt(rdEle.getChildText("maxSize"));
 		}
 	}
 	

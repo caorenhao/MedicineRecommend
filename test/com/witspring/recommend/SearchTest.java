@@ -58,14 +58,14 @@ public class SearchTest {
 			JSONObject med = meds.getJSONObject(i);
 			String str = med.getString("ypmc");
 			String prob = med.getString("prob");
-			//System.out.println(str + "\t" + prob);
+			System.out.println(str + "\t" + prob);
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		SearchTest search = new SearchTest();
 		
-		String icd_name = "高血压";
+		String icd_name = "风湿性关节炎";
 //		icd_name = "沙眼";
 //		icd_name = "高血压";
 		//icd_name = "高血压";

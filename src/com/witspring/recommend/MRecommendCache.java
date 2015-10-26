@@ -52,7 +52,6 @@ public class MRecommendCache {
 		JSONArray result = null;
 		if(ret != null) {
 			result = JSONArray.parseArray(ret);
-			//System.out.println(result.toJSONString());
 		}
 		
 		return result;

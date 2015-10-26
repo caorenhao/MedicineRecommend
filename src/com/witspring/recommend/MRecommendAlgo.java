@@ -71,13 +71,13 @@ public class MRecommendAlgo {
 	
 	/** 返回年龄组合*/
 	public static String getAgeRange(float ageStart, float ageEnd) {
-		String ageRange = null;
+		StringBuffer sb = new StringBuffer();
 		if(ageEnd == 0)
-			ageRange = "0-0";
+			sb.append("0-0");
 		else 
-			ageRange = ageStart + "-" + ageEnd;
+			sb.append(ageStart).append("-").append(ageEnd);
 		
-		return ageRange;
+		return sb.toString();
 	}
 	
 	/**
