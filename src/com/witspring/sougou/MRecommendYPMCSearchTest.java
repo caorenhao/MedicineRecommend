@@ -1,0 +1,361 @@
+package com.witspring.sougou;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.sphx.api.SphinxClient;
+import org.sphx.api.SphinxException;
+import org.sphx.api.SphinxMatch;
+import org.sphx.api.SphinxResult;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.witspring.mrecommend.conf.ConfigSingleton;
+import com.witspring.mrecommend.conf.MRecommendConfig;
+import com.witspring.recommend.MRecommendAlgo;
+import com.witspring.recommend.MRecommendCache;
+import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendYpmcDiseaseCorrelationSearch;
+import com.witspring.util.IOUtil;
+import com.witspring.util.Pair;
+import com.witspring.util.StrUtil;
+
+/**
+ * 药物推荐搜索.
+ *
+ * @author renhao.cao.
+ *         Created 2015年10月7日.
+ */
+public class MRecommendYPMCSearchTest {
+	
+	/**
+	 * 初始化疾病ID对应的索引列表.
+	 *
+	 * @throws Exception
+	 */
+	public static void init() throws Exception {
+		// 导入根据疾病ID划分的索引表
+		MRecommendCost.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
+		List<String> indexList = new ArrayList<String>();
+		indexList = IOUtil.readStringListFromFile(
+				new File(MRecommendCost.INDEX_TABLE_PATH), indexList);
+		for(String index : indexList) {
+			String[] strs = index.split(" ");
+			String[] range = strs[0].split(",");
+			MRecommendCost.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
+					Integer.parseInt(range[1])), strs[1]);
+		}
+		
+		// 导入疾病及对应的疾病ID表
+		MRecommendCost.IcdNameIdMap = new HashMap<Integer, String>();
+		List<String> icdNameList = new ArrayList<String>();
+		icdNameList = IOUtil.readStringListFromFile(
+				new File(MRecommendCost.ICDNAME_TABLE_PATH), icdNameList);
+		for(String index : icdNameList) {
+			String[] strs = index.split(MRecommendCost.ATTR_STR);
+			MRecommendCost.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
+		}
+		
+		// 导入症状及对应的症状ID表
+		MRecommendCost.SymptomIdMap = new HashMap<String, Integer>();
+		List<String> symptomList = new ArrayList<String>();
+		symptomList = IOUtil.readStringListFromFile(
+				new File(MRecommendCost.SYMPTOM_TABLE_PATH), symptomList);
+		for(String index : symptomList) {
+			String[] strs = index.split(MRecommendCost.ATTR_STR);
+			MRecommendCost.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
+		}
+		
+		// 导入中药材词典(过滤(补充过滤,在进索引时已经进行过初步过滤了)推荐药品中的中药材)
+		MRecommendCost.ChineseMedicineMap = new HashMap<String, Integer>();
+		List<String> chineseMedicineList = new ArrayList<String>();
+		chineseMedicineList = IOUtil.readStringListFromFile(
+				new File(MRecommendCost.CHINESE_MEDICINE_PATH), chineseMedicineList);
+		for(String chineseMedicine : chineseMedicineList) {
+			MRecommendCost.ChineseMedicineMap.put(chineseMedicine, 1);
+		}
+		
+		// 初始化Sphinx的配置
+		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
+		MRecommendCost.SphinxIP = conf.sphinxConf.server;
+		MRecommendCost.SphinxPort = conf.sphinxConf.port;
+		MRecommendCost.SphinxPortYpmcDisease = conf.sphinxConf.portYpmcDisease;
+	}
+	
+	/**
+	 * 根据疾病名称选择搜索索引.
+	 * 
+	 * @param icd_name_id
+	 * @return String
+	 */
+	private static String getIndex(int icd_name_id) {
+		String index = "";
+		for(Map.Entry<Pair<Integer, Integer>, String> entry : MRecommendCost.IndexMap.entrySet()) {
+			if(icd_name_id >= entry.getKey().first && icd_name_id < entry.getKey().second)
+				index = entry.getValue();
+		}
+		
+		return index;
+	}
+	
+	/**
+	 * 按照条件查找所使用的药物.
+	 * 	将症状当作过滤条件
+	 * @param icd_name_id 疾病编号
+	 * @param sex 性别
+	 * @param ageStart 年龄开始
+	 * @param ageEnd 年龄结束
+	 * @param symptoms 症状(0 表示复诊病例的症状)
+	 * @return List<Pair<String, Integer>>
+	 */
+	public static List<Pair<String, Integer>> searchYpmc_mva(int icd_name_id, 
+			int sex, int ageStart, int ageEnd, int[] symptoms) {
+        String index = getIndex(icd_name_id);
+        List<Pair<String, Integer>> ret = new ArrayList<Pair<String, Integer>>();
+        SphinxClient cl = new SphinxClient();
+        try {
+			cl.SetServer(MRecommendCost.SphinxIP, MRecommendCost.SphinxPort);
+	        cl.SetLimits(0, MRecommendCost.SPHINX_YPSL);
+	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        
+	        // 过滤条件
+	        // 疾病过滤
+	        cl.SetFilter("icd_name_id", icd_name_id, false);
+	        // 性别过滤
+	        if(sex != 0)
+	        	cl.SetFilter("sex", sex, false);
+	        // 年龄过滤
+	        if(ageEnd != 0)
+	        	cl.SetFilterRange("age", ageStart, ageEnd, false);
+	        // 症状过滤
+	        if(symptoms != null) {
+	        	// 并的关系
+	        	/*
+	        	for(int symptom : symptoms) {
+	        		cl.SetFilter("symptom", symptom, false);
+	        	}
+	        	*/
+	        	// 或的关系
+	        	cl.SetFilter("symptom", symptoms, false);
+	        }
+	        
+	        // 分组条件
+	        cl.SetSelect("ypmc, @count");
+	        cl.SetGroupBy("ypmc", SphinxClient.SPH_GROUPBY_ATTR, "@count desc");
+	        
+	        // 在Sphinx中搜索
+	        SphinxResult res = cl.Query("", index);
+	        
+	        if(res != null) {
+	        	List<Pair<String, Integer>> ypmcs = new ArrayList<Pair<String, Integer>>();
+	        	for (int i = 0; i < res.matches.length; i++){
+		            SphinxMatch info = res.matches[i];
+		            String ypmc = info.attrValues.get(0).toString();
+		            String cnt = info.attrValues.get(1).toString();
+		            
+		            // 将中药材进行补充过滤
+		            if(!MRecommendCost.ChineseMedicineMap.containsKey(ypmc)) {
+	            		// 将与该疾病相关度不高的药品过滤
+		            	ypmcs.add(new Pair<String, Integer>(ypmc, Integer.parseInt(cnt)));
+		            }
+		        }
+		        
+	        	// 计算推荐的药品与疾病的相关性
+	        	if(ageEnd == 0) {
+	        		Object[] subAry = MRecommendAlgo.splitAry(ypmcs, MRecommendCost.SPHINX_MAX_QUERYS);
+			        for(Object obj: subAry){
+			        	if(ret.size() >= 20)
+			        		return ret;
+			        	
+			        	List<Pair<String, Integer>> aryItem = (List<Pair<String, Integer>>)obj;
+			        	boolean[] flags = MRecommendYpmcDiseaseCorrelationSearch
+			        			.getCorrelation(aryItem, icd_name_id);
+			        	for(int i = 0; i < flags.length && ret.size() < MRecommendCost.YPSL; i++) {
+			        		//System.out.println(flags[i]);
+			        		if(flags[i]) {
+			        			ret.add(aryItem.get(i));
+			        		}
+			        	}
+			        }
+	        	} else {
+	        		for(int i = 0; i < ypmcs.size() && ret.size() < MRecommendCost.YPSL; i++) {
+	        			ret.add(ypmcs.get(i));
+	        		}
+	        	}
+	        } else {
+	        	System.out.println("无查询结果");
+	        }
+		} catch (SphinxException ex) {
+			ex.printStackTrace();
+		} finally {
+			if(cl != null) {
+				try {
+					cl.Close();
+				} catch(Exception ex){
+					ex.printStackTrace();
+				}
+			}
+		}
+        
+        return ret;
+	}
+	
+	/** 
+	 * 获取指定索引中的Doc总数
+	 * 
+	 * @param host 
+	 * @param port 
+	 * @param index 
+	 */
+	public static int getTotal_mva(int icd_name_id, int sex, int ageStart, 
+			int ageEnd, int[] symptoms) {
+		SphinxClient cl = new SphinxClient();
+		String index = getIndex(icd_name_id);
+		index = index + "_total";
+		
+        int total = 0;
+        try {
+			cl.SetServer(MRecommendCost.SphinxIP, MRecommendCost.SphinxPort);
+			cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
+	        cl.SetLimits (0, 10);
+	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        
+	        // 过滤条件
+	        cl.SetFilter("icd_name_id", icd_name_id, false);
+	        if(sex != 0)
+	        	cl.SetFilter("sex", sex, false);
+	        if(ageEnd != 0)
+	        	cl.SetFilterRange("age", ageStart, ageEnd, false);
+	        if(symptoms != null) {
+	        	// 并的关系
+	        	/*
+	        	for(int symptom : symptoms) {
+	        		cl.SetFilter("symptom", symptom, false);
+	        	}
+	        	*/
+	        	// 或的关系
+	        	cl.SetFilter("symptom", symptoms, false);
+	        }
+	        
+	        SphinxResult res = cl.Query("", index);
+	        total = res.totalFound;
+	        //System.out.println("total_found:" + res.totalFound);
+	        //System.out.println("time:" + res.time);
+		} catch (SphinxException ex) {
+			ex.printStackTrace();
+		} finally {
+			if(cl != null) {
+				try {
+					cl.Close();
+				} catch(Exception ex){
+					ex.printStackTrace();
+				}
+			}
+		}
+        
+        return total;
+	}
+	
+	public void outputAllIcdYpmcSearch() throws Exception {
+		// 测试所有疾病需要的最大搜索时间
+		Map<String, Integer> topSearchTime = new HashMap<String, Integer>();
+		FileWriter fw = new FileWriter(new File(""));
+		for(int i = 1; i < 12000; i++) {
+			if(MRecommendCost.IcdNameIdMap.containsKey(i)) {
+				System.out.println("Process to " + i);
+				long start1 = System.currentTimeMillis();
+				List<Pair<String, Integer>> ret = MRecommendYPMCSearchTest
+						.searchYpmc_mva(i, 0, 2, 0, null);
+				fw.write("疾病id:" + i);
+				fw.write("疾病:" + MRecommendCost.IcdNameIdMap.get(i) + "\n");
+				fw.write("推荐结果：" + StrUtil.join(ret, ",") + "\n");
+				long end1 = System.currentTimeMillis();
+				fw.write("推荐共用时：" + (end1-start1) + "ms\n");
+				fw.write("\n");
+				topSearchTime.put(MRecommendCost.IcdNameIdMap.get(i), 
+						(int)(end1-start1));
+			}
+		}
+		IOUtil.forceClose(fw);
+		
+		PrintWriter pw = new PrintWriter(new File("c:/crh/work/ret2.txt"));
+		List<Map.Entry<String, Integer>> list = MRecommendAlgo.sortValueDesc(topSearchTime);
+		for(Map.Entry<String, Integer> entry : list) {
+			pw.println(entry.getKey() + "\t" + entry.getValue());
+		}
+		IOUtil.forceClose(pw);
+	}
+	
+	public JSONArray search(MRecommendCache cache, int icd_name_id, int sex, 
+			int ageStart, int ageEnd, int[] symptoms) throws Exception {
+		// 查询缓存中是否存在结果, 若无结果则去搜索引擎搜索
+		JSONArray obj = cache.get(icd_name_id, symptoms, sex, ageStart, ageEnd);
+		if(obj != null) {
+			//System.out.println("直接从cache中返回");
+			return obj;
+		}
+		
+		long start = System.currentTimeMillis();
+		List<Pair<String, Integer>> ret = searchYpmc_mva(icd_name_id, sex, 
+				ageStart, ageEnd, symptoms);
+		int toatl = getTotal_mva(icd_name_id, sex, ageStart, ageEnd, symptoms);
+		JSONArray array = new JSONArray();
+		for(Pair<String, Integer> pair : ret) {
+			JSONObject objProb = new JSONObject();
+			objProb.put("ypmc", pair.first);
+			objProb.put("prob", ((double)pair.second/(double)toatl*0.9));
+			array.add(objProb);
+		}
+		long end = System.currentTimeMillis();
+		long time = end - start;
+		// 如果处理时间超过500ms, 则将结果加入缓存中
+		if(time > 500) {
+			System.out.println("icd_name_id:" + icd_name_id + "\tsymptoms:" 
+					+ StrUtil.join(symptoms,",") + "\tsex:" + sex + "\tageRange:" 
+					+ ageStart + "-" + ageEnd + "\ttime:" + time 
+					+ "\t查询超过阈值, 将结果放入缓存");
+			cache.put(icd_name_id, symptoms, sex, ageStart, ageEnd, array);
+		}
+		
+		return array;
+	}
+	
+	/**
+	 * TODO Put here a description of what this method does.
+	 * 
+	 * @param args 
+	 * @throws Exception 
+	 */
+	public static void main(String[] args) throws Exception {
+		init();
+		
+		MRecommendYPMCSearchTest search = new MRecommendYPMCSearchTest();
+		MRecommendCache cache = new MRecommendCache();
+		//search.outputAllIcdYpmcSearch();
+		
+		int icd_name_id = 11378;
+		int sex = 0;
+		int ageStart = 10;
+		int ageEnd = 0;
+		String[] symptoms = null;
+		int[] symptom_ids = null;
+		if(symptoms != null) {
+			symptom_ids = new int[symptoms.length];
+			for(int i = 0; i < symptoms.length; i++) {
+				symptom_ids[i] = MRecommendCost.SymptomIdMap.get(symptoms[i]);
+			}
+		}
+		
+		long start1 = System.currentTimeMillis();
+		JSONArray ret = search.search(cache, icd_name_id, sex, ageStart, 
+				ageEnd, symptom_ids);
+		System.out.println(ret);
+		long end1 = System.currentTimeMillis();
+		System.out.println("推荐共用时：" + (end1-start1) + "ms");
+	}
+}

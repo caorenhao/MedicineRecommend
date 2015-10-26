@@ -17,15 +17,17 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.witspring.mrecommend.conf.ConfigSingleton;
 import com.witspring.mrecommend.conf.MRecommendConfig;
+import com.witspring.sougou.FileUtil;
 import com.witspring.util.IOUtil;
 import com.witspring.util.Pair;
 import com.witspring.util.StrUtil;
 
 /**
  * 药物推荐搜索.
- *
+ * 将计算药物与疾病相关度的方法转变到内存中使用Map来实现(查询速度提高一倍)
+ * 
  * @author renhao.cao.
- *         Created 2015年10月7日.
+ *         Created 2015年10月26日.
  */
 public class MRecommendYPMCSearch {
 	
@@ -74,6 +76,38 @@ public class MRecommendYPMCSearch {
 				new File(MRecommendCost.CHINESE_MEDICINE_PATH), chineseMedicineList);
 		for(String chineseMedicine : chineseMedicineList) {
 			MRecommendCost.ChineseMedicineMap.put(chineseMedicine, 1);
+		}
+		
+		// 导入药品疾病关系表
+		Map<String, Map<Integer, Double>> ypmcDiseaseCorrTempMap = 
+				new HashMap<String, Map<Integer,Double>>();
+		MRecommendCost.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
+		String inputPath = "./data/dict/t_qb_zyzd_ypmc_3/";
+		List<String> list = new ArrayList<String>();
+		List<File> paths = FileUtil.getAllFiles(inputPath);
+		for(File file : paths) {
+			list = IOUtil.readStringListFromFile(file, list);
+			for(String str : list) {
+				String[] strs = str.split(MRecommendCost.ATTR_STR);
+				
+				Map<Integer, Double> temp = new HashMap<Integer, Double>();
+				if(ypmcDiseaseCorrTempMap.containsKey(strs[1]))
+					temp = ypmcDiseaseCorrTempMap.get(strs[1]);
+				temp.put(Integer.parseInt(strs[4]), Double.parseDouble(strs[2]));
+				ypmcDiseaseCorrTempMap.put(strs[1], temp);
+			}
+		}
+		// 对药品下的疾病进行排序，排除掉指定顺序之外的疾病
+		for(Map.Entry<String, Map<Integer, Double>> entry : ypmcDiseaseCorrTempMap.entrySet()) {
+			List<Map.Entry<Integer, Double>> tempList = 
+					MRecommendAlgo.sortIntDoubleDesc(entry.getValue());
+			Map<Integer, Double> tempMap = new HashMap<Integer, Double>();
+			int length = tempList.size() > MRecommendCost.YPMC_DISEASE_RANK ? 
+				MRecommendCost.YPMC_DISEASE_RANK : tempList.size();
+			for(int i = 0; i < length; i++) {
+				tempMap.put(tempList.get(i).getKey(), tempList.get(i).getValue());
+			}
+			MRecommendCost.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
 		}
 		
 		// 初始化Sphinx的配置
@@ -163,21 +197,18 @@ public class MRecommendYPMCSearch {
 		        
 	        	// 计算推荐的药品与疾病的相关性
 	        	if(ageEnd == 0) {
-	        		Object[] subAry = MRecommendAlgo.splitAry(ypmcs, MRecommendCost.SPHINX_MAX_QUERYS);
-			        for(Object obj: subAry){
-			        	if(ret.size() >= 20)
-			        		return ret;
-			        	
-			        	List<Pair<String, Integer>> aryItem = (List<Pair<String, Integer>>) obj;
-			        	boolean[] flags = MRecommendYpmcDiseaseCorrelationSearch
-			        			.getCorrelation(aryItem, icd_name_id);
-			        	for(int i = 0; i < flags.length && ret.size() < MRecommendCost.YPSL; i++) {
-			        		//System.out.println(flags[i]);
-			        		if(flags[i]) {
-			        			ret.add(aryItem.get(i));
-			        		}
-			        	}
-			        }
+	        		for(Pair<String, Integer> ypmc : ypmcs) {
+	        			// 如果数量达到返回数量值，则直接返回
+	        			if(ret.size() >= MRecommendCost.YPSL)
+	        				return ret;
+	        			
+	        			if(MRecommendCost.ypmcDiseaseCorrMap.containsKey(ypmc.first)) {
+	        				Map<Integer, Double> temp = MRecommendCost
+	        						.ypmcDiseaseCorrMap.get(ypmc.first);
+	        				if(temp.containsKey(icd_name_id))
+	        					ret.add(ypmc);
+	        			}
+	        		}
 	        	} else {
 	        		for(int i = 0; i < ypmcs.size() && ret.size() < MRecommendCost.YPSL; i++) {
 	        			ret.add(ypmcs.get(i));

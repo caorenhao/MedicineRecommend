@@ -14,7 +14,7 @@ public class MRecommendAlgo {
 
 	/**
 	 * 词频统计算法.
-	 *
+	 * 
 	 * @param map 词频统计集合
 	 * @param str 词
 	 * @return Map<String, Integer>
@@ -42,6 +42,33 @@ public class MRecommendAlgo {
 	    Collections.sort(infoIds, new Comparator<Map.Entry<String,Double>>() {
 	        @Override
 			public int compare(Map.Entry<String,Double> o1, Map.Entry<String,Double> o2) {
+	        	if (o2.getValue() > o1.getValue()){
+    				return 1;
+    			}
+    			else if (o1.getValue() > o2.getValue()){
+    				return -1;
+    			}
+    			else{
+    				return 0;
+    			}
+	        }
+	    });
+	    return infoIds;
+	}
+	
+	/**
+	 * 对Map<String,Double>按照value进行降序排序.
+	 *
+	 * @param map Map<String,Double>
+	 * @return List<Map.Entry<String,Double>>
+	 * @throws IOException
+	 */
+	public static List<Map.Entry<Integer, Double>> sortIntDoubleDesc(
+			Map<Integer, Double> map) throws IOException{
+	    List<Map.Entry<Integer,Double>> infoIds = new ArrayList<Map.Entry<Integer,Double>>(map.entrySet());
+	    Collections.sort(infoIds, new Comparator<Map.Entry<Integer,Double>>() {
+	        @Override
+			public int compare(Map.Entry<Integer,Double> o1, Map.Entry<Integer,Double> o2) {
 	        	if (o2.getValue() > o1.getValue()){
     				return 1;
     			}
@@ -137,7 +164,8 @@ public class MRecommendAlgo {
      * @return Object[]
      */  
     public static Object[] splitAry(List<Pair<String, Integer>> ary, int subSize) {
-    	int count = ary.size() % subSize == 0 ? ary.size() / subSize: ary.size() / subSize + 1;  
+    	int arySize = ary.size();
+    	int count = arySize % subSize == 0 ? arySize / subSize: arySize / subSize + 1;  
 
     	List<List<Pair<String, Integer>>> subAryList = new ArrayList<List<Pair<String, Integer>>>();
     	
@@ -145,7 +173,7 @@ public class MRecommendAlgo {
     		int index = i * subSize;
     		List<Pair<String, Integer>> list = new ArrayList<Pair<String, Integer>>();
     		int j = 0;
-    		while (j < subSize && index < ary.size()) {
+    		while (j < subSize && index < arySize) {
     			list.add(ary.get(index++));
     			j++;
     		}

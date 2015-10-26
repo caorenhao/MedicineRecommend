@@ -18,6 +18,9 @@ public class MRecommendCost {
 	/** 中药材词典路径*/
 	public final static String CHINESE_MEDICINE_PATH = "./data/dict/zhongyao_new.txt";
 	
+	/** 药品名称与疾病之间的相关度数据表的路径*/
+	public final static String YPMC_DISEASE_ROOT_PATH = "./data/dict/t_qb_zyzd_ypmc_3";
+	
 	/** 查询时间过长需要初始化时读入缓存的疾病id*/
 	public final static String INIT_ICD_NAME_PATH = "./data/icd_name_id.txt";
 	
@@ -47,6 +50,9 @@ public class MRecommendCost {
 	
 	/** 中药材词典*/
 	public static Map<String, Integer> ChineseMedicineMap;
+	
+	/** 药品与疾病的相关性集合*/
+	public static Map<String, Map<Integer, Double>> ypmcDiseaseCorrMap;
 	
 	/** HDFS导出数据的分隔符*/
 	public static String ATTR_STR = "";

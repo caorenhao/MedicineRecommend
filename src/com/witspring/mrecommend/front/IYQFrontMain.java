@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -17,9 +18,11 @@ import com.sun.net.httpserver.HttpServer;
 import com.witspring.mrecommend.conf.ConfigSingleton;
 import com.witspring.mrecommend.conf.MRecommendConfig;
 import com.witspring.net.common.WorkingDir;
+import com.witspring.recommend.MRecommendAlgo;
 import com.witspring.recommend.MRecommendCache;
 import com.witspring.recommend.MRecommendCost;
 import com.witspring.recommend.MRecommendYPMCSearch;
+import com.witspring.sougou.FileUtil;
 import com.witspring.util.IOUtil;
 import com.witspring.util.LoggerConfig;
 import com.witspring.util.PIDUtil;
@@ -75,6 +78,37 @@ public class IYQFrontMain {
 				new File(MRecommendCost.CHINESE_MEDICINE_PATH), chineseMedicineList);
 		for(String chineseMedicine : chineseMedicineList) {
 			MRecommendCost.ChineseMedicineMap.put(chineseMedicine, 1);
+		}
+		
+		// 导入药品疾病关系表
+		Map<String, Map<Integer, Double>> ypmcDiseaseCorrTempMap = 
+				new HashMap<String, Map<Integer,Double>>();
+		MRecommendCost.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
+		List<String> list = new ArrayList<String>();
+		List<File> paths = FileUtil.getAllFiles(MRecommendCost.YPMC_DISEASE_ROOT_PATH);
+		for(File file : paths) {
+			list = IOUtil.readStringListFromFile(file, list);
+			for(String str : list) {
+				String[] strs = str.split(MRecommendCost.ATTR_STR);
+				
+				Map<Integer, Double> temp = new HashMap<Integer, Double>();
+				if(ypmcDiseaseCorrTempMap.containsKey(strs[1]))
+					temp = ypmcDiseaseCorrTempMap.get(strs[1]);
+				temp.put(Integer.parseInt(strs[4]), Double.parseDouble(strs[2]));
+				ypmcDiseaseCorrTempMap.put(strs[1], temp);
+			}
+		}
+		// 对药品下的疾病进行排序，排除掉指定顺序之外的疾病
+		for(Map.Entry<String, Map<Integer, Double>> entry : ypmcDiseaseCorrTempMap.entrySet()) {
+			List<Map.Entry<Integer, Double>> tempList = 
+					MRecommendAlgo.sortIntDoubleDesc(entry.getValue());
+			Map<Integer, Double> tempMap = new HashMap<Integer, Double>();
+			int length = tempList.size() > MRecommendCost.YPMC_DISEASE_RANK ? 
+				MRecommendCost.YPMC_DISEASE_RANK : tempList.size();
+			for(int i = 0; i < length; i++) {
+				tempMap.put(tempList.get(i).getKey(), tempList.get(i).getValue());
+			}
+			MRecommendCost.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
 		}
 		
 		// 初始化Sphinx的配置

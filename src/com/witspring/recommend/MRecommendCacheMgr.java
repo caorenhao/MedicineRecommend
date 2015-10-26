@@ -29,8 +29,8 @@ public class MRecommendCacheMgr {
 	
 	public static void main(String[] args) throws Exception {
 		MRecommendCacheMgr test = new MRecommendCacheMgr();
-		test.delAll();
-		test.del("8169");
+		//test.delAll();
+		test.del("11378");
 	}
 	
 }
