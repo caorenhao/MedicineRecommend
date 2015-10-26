@@ -12,22 +12,24 @@ public class MRecommendCacheMgr {
 		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
 		String server = conf.redisConf.server;
 		int port = conf.redisConf.port;
-		jedis = JedisWrapper.getInstance(server, port, 50);
+		int maxSize = conf.redisConf.maxSize;
+		jedis = JedisWrapper.getInstance(server, port, maxSize);
 	}
 	
 	/** 删除所有数据库*/
 	public void delAll() {
-		System.out.println(jedis.flushDB());
+		System.out.println("清空全部数据库" + jedis.flushDB());
 	}
 	
 	/** 删除指定数据库*/
 	public void del(String key) {
-		System.out.println(jedis.del(key));
+		jedis.del(key);
+		System.out.println("删除数据库 " + key + " 成功");
 	}
 	
 	public static void main(String[] args) throws Exception {
 		MRecommendCacheMgr test = new MRecommendCacheMgr();
-		//test.delAll();
+		test.delAll();
 		test.del("8169");
 	}
 	

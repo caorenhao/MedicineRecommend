@@ -33,6 +33,7 @@ public class MRecommendConfig extends JDomConfig {
 	public static class HttpConf {
 		public String server;
 		public int port;
+		public int threadNum;
 		/**
 		 * 解析方法.
 		 *
@@ -43,6 +44,7 @@ public class MRecommendConfig extends JDomConfig {
 			Element rdEle = rootEle;
 			server = rdEle.getChildText("server");
 			port = Integer.parseInt(rdEle.getChildText("port"));
+			threadNum = Integer.parseInt(rdEle.getChildText("threadNum"));
 		}
 	}
 	

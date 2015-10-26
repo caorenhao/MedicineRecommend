@@ -12,6 +12,7 @@
 	<http>
 		<server>localhost</server>
 		<port>8052</port>
+		<threadNum>100</threadNum>
 	</http>
 	
 	<sphinx>

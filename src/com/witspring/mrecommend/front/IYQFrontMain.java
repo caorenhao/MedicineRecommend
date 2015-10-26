@@ -35,6 +35,8 @@ public class IYQFrontMain {
 	
 	private Log LOGGER = LoggerConfig.getLog(getClass());
 	
+	private static MRecommendConfig conf;
+	
 	/**
 	 * 初始化相关数据.
 	 *
@@ -76,7 +78,7 @@ public class IYQFrontMain {
 		}
 		
 		// 初始化Sphinx的配置
-		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
+		conf = ConfigSingleton.getMRecommendConfig();
 		MRecommendCost.SphinxIP = conf.sphinxConf.server;
 		MRecommendCost.SphinxPort = conf.sphinxConf.port;
 		MRecommendCost.SphinxPortYpmcDisease = conf.sphinxConf.portYpmcDisease;
@@ -99,8 +101,8 @@ public class IYQFrontMain {
 		IYQFrontConst.mRecommendCache = new MRecommendCache();
 		
 		// 开启Http Server
-		String ip = ConfigSingleton.getMRecommendConfig().httpConf.server;
-		int port = ConfigSingleton.getMRecommendConfig().httpConf.port;
+		String ip = conf.httpConf.server;
+		int port = conf.httpConf.port;
 		HttpServer server = HttpServer.create(new InetSocketAddress(
 				ip, port), 5);
 		server.createContext("/", new IYQFrontHandler());
@@ -114,7 +116,8 @@ public class IYQFrontMain {
 	
 	/** 创建线程池*/
 	public ExecutorService newCachedThreadPool() {
-        return new ThreadPoolExecutor(200, Integer.MAX_VALUE,
+		int threadNum = conf.httpConf.threadNum;
+        return new ThreadPoolExecutor(threadNum, Integer.MAX_VALUE,
                                       60L, TimeUnit.SECONDS,
                                       new SynchronousQueue<Runnable>());
     }

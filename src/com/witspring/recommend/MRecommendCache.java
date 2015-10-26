@@ -21,7 +21,7 @@ public class MRecommendCache {
 		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
 		String server = conf.redisConf.server;
 		int port = conf.redisConf.port;
-		int maxSize = 50;
+		int maxSize = conf.redisConf.maxSize;
 		jedis = JedisWrapper.getInstance(server, port, maxSize);
 	}
 	
