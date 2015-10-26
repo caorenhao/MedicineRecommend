@@ -58,26 +58,26 @@ public class SearchTest {
 			JSONObject med = meds.getJSONObject(i);
 			String str = med.getString("ypmc");
 			String prob = med.getString("prob");
-			System.out.println(str + "\t" + prob);
+			//System.out.println(str + "\t" + prob);
 		}
 	}
 	
 	public static void main(String[] args) throws Exception {
 		SearchTest search = new SearchTest();
-		long start = System.currentTimeMillis();
 		
 		String icd_name = "高血压";
 //		icd_name = "沙眼";
 //		icd_name = "高血压";
 		//icd_name = "高血压";
+		long start = System.currentTimeMillis();
 		if(MRecommendCost.IcdNameMap.containsKey(icd_name)) {
 			int icd_name_id = MRecommendCost.IcdNameMap.get(icd_name);
 			search.search(icd_name_id, 0, 0, 0, "");
-			long end = System.currentTimeMillis();
-			System.out.println("查询共耗时：" + (end-start) + "ms");
 		} else {
 			System.out.println("数据库无此病");
 		}
+		long end = System.currentTimeMillis();
+		System.out.println("查询共耗时：" + (end-start) + "ms");
 		
 //		search.search(106, 0, 0, 0, "");
 //		long end = System.currentTimeMillis();
