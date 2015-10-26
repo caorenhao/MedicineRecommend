@@ -7,6 +7,7 @@ import java.util.List;
 import com.alibaba.fastjson.JSONArray;
 import com.witspring.mrecommend.conf.ConfigSingleton;
 import com.witspring.mrecommend.conf.MRecommendConfig;
+import com.witspring.util.CRC32;
 import com.witspring.util.IOUtil;
 import com.witspring.util.JedisWrapper;
 import com.witspring.util.NetUtil;
@@ -45,8 +46,9 @@ public class MRecommendCache {
 		StringBuffer sb = new StringBuffer();
 		String key = sb.append(symptom).append("_").append(sex).append("_")
 				.append(ageRange).toString();
-		String keyDes = DesUtil.encrypt(key, DesUtil.KEY);
-		String ret = jedis.hget(String.valueOf(icd_name_id), keyDes);
+		//String keyDes = DesUtil.encrypt(key, DesUtil.KEY);
+		int keyId = CRC32.getCRC32(key);
+		String ret = jedis.hget(String.valueOf(icd_name_id), String.valueOf(keyId));
 		JSONArray result = null;
 		if(ret != null) {
 			result = JSONArray.parseArray(ret);
@@ -64,8 +66,9 @@ public class MRecommendCache {
 		StringBuffer sb = new StringBuffer();
 		String key = sb.append(symptom).append("_").append(sex).append("_")
 				.append(ageRange).toString();
-		String keyDes = DesUtil.encrypt(key, DesUtil.KEY);
-		long ret = jedis.hset(String.valueOf(icd_name_id), keyDes, 
+		//String keyDes = DesUtil.encrypt(key, DesUtil.KEY);
+		int keyId = CRC32.getCRC32(key);
+		long ret = jedis.hset(String.valueOf(icd_name_id), String.valueOf(keyId), 
 				array.toJSONString());
 		
 		return ret;
