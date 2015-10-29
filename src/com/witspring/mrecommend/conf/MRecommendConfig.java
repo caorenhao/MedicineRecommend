@@ -30,6 +30,20 @@ public class MRecommendConfig extends JDomConfig {
 		}
 	}
 	
+	public static class PhpDBConf {
+		public String host;
+		public String port;
+		public String user;
+		public String pwd;
+		
+		public void parse(Element rootEle) throws Exception {
+			host = rootEle.getChildText("host");
+			port = rootEle.getChildText("port");
+			user = rootEle.getChildText("user");
+			pwd = rootEle.getChildText("pwd");
+		}
+	}
+	
 	public static class HttpConf {
 		public String server;
 		public int port;
@@ -90,6 +104,8 @@ public class MRecommendConfig extends JDomConfig {
 	
 	/** redis 配置文件*/
 	public RedisConf redisConf = new RedisConf();
+	/** SphinxQL 配置文件*/
+	public PhpDBConf phpDBConf = new PhpDBConf();
 	/** http 配置文件*/
 	public HttpConf httpConf = new HttpConf();
 	/** sphinx 配置文件*/
@@ -108,6 +124,7 @@ public class MRecommendConfig extends JDomConfig {
 	protected void parse() throws Exception {
 		Element root = getRootEle();
 		redisConf.parse(root.getChild("redis"));
+		//phpDBConf.parse(rootEle.getChild("phpDB"));
 		httpConf.parse(root.getChild("http"));
 		sphinxConf.parse(root.getChild("sphinx"));
 		paramConf.parse(root.getChild("param"));

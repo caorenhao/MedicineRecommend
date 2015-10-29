@@ -330,12 +330,12 @@ public class MRecommendYPMCSearch {
 		long start = System.currentTimeMillis();
 		List<Pair<String, Integer>> ret = searchYpmc_mva(icd_name_id, sex, 
 				ageStart, ageEnd, symptoms);
-		int toatl = getTotal_mva(icd_name_id, sex, ageStart, ageEnd, symptoms);
+		int total = getTotal_mva(icd_name_id, sex, ageStart, ageEnd, symptoms);
 		JSONArray array = new JSONArray();
 		for(Pair<String, Integer> pair : ret) {
 			JSONObject objProb = new JSONObject();
 			objProb.put("ypmc", pair.first);
-			objProb.put("prob", ((double)pair.second/(double)toatl*0.9));
+			objProb.put("prob", ((double)pair.second/(double)total*0.9));
 			array.add(objProb);
 		}
 		long end = System.currentTimeMillis();
@@ -365,7 +365,7 @@ public class MRecommendYPMCSearch {
 		MRecommendCache cache = new MRecommendCache();
 		//search.outputAllIcdYpmcSearch();
 		
-		int icd_name_id = 11378;
+		int icd_name_id = 11525;
 		int sex = 0;
 		int ageStart = 10;
 		int ageEnd = 0;
@@ -382,6 +382,12 @@ public class MRecommendYPMCSearch {
 		JSONArray ret = search.search(cache, icd_name_id, sex, ageStart, 
 				ageEnd, symptom_ids);
 		System.out.println(ret);
+		for(int i = 0; i < ret.size(); i++) {
+			JSONObject med = ret.getJSONObject(i);
+			String str = med.getString("ypmc");
+			String prob = med.getString("prob");
+			System.out.println(MRecommendCost.IcdNameIdMap.get(icd_name_id) + "\t" + str + "\t" + prob);
+		}
 		long end1 = System.currentTimeMillis();
 		System.out.println("推荐共用时：" + (end1-start1) + "ms");
 	}

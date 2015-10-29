@@ -22,6 +22,7 @@ import com.witspring.recommend.MRecommendAlgo;
 import com.witspring.recommend.MRecommendCache;
 import com.witspring.recommend.MRecommendCost;
 import com.witspring.recommend.MRecommendYPMCSearch;
+import com.witspring.recommend.MRecommendYPMCSearchBySphinxQL;
 import com.witspring.sougou.FileUtil;
 import com.witspring.util.IOUtil;
 import com.witspring.util.LoggerConfig;
@@ -126,13 +127,13 @@ public class IYQFrontMain {
 		MRecommendCost.YPSL = conf.paramConf.ypsl;
 		MRecommendCost.YPMC_DISEASE_RANK = conf.paramConf.ypmc_disease_rank;
 		
-		// 初始化查询时间过长的推荐结果
-		MRecommendCache cache = new MRecommendCache();
-		cache.initData();
-		System.out.println("The cache init end.");
-		
 		IYQFrontConst.mRecommendYPMCSearch = new MRecommendYPMCSearch();
+		IYQFrontConst.mRecommendYPMCSearchBySphinxQL = new MRecommendYPMCSearchBySphinxQL();
 		IYQFrontConst.mRecommendCache = new MRecommendCache();
+		
+		// 初始化查询时间过长的推荐结果
+		IYQFrontConst.mRecommendCache.initData();
+		System.out.println("The cache init end.");
 		
 		// 开启Http Server
 		String ip = conf.httpConf.server;

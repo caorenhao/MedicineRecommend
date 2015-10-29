@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -50,16 +51,16 @@ public class SearchTest {
 		post.setEntity(new UrlEncodedFormEntity(nvps, "UTF-8"));
 		
 		String content = HttpClientCommon.execute(httpclient, post);
-		//System.out.println(content);
-		JSONObject obj = JSONObject.parseObject(content);
-		JSONObject ret = obj.getJSONObject("ret");
-		JSONArray meds = ret.getJSONArray("medicineList");
-		for(int i = 0; i < meds.size(); i++) {
-			JSONObject med = meds.getJSONObject(i);
-			String str = med.getString("ypmc");
-			String prob = med.getString("prob");
-			System.out.println(str + "\t" + prob);
-		}
+		System.out.println(content);
+//		JSONObject obj = JSONObject.parseObject(content);
+//		JSONObject ret = obj.getJSONObject("ret");
+//		JSONArray meds = ret.getJSONArray("medicineList");
+//		for(int i = 0; i < meds.size(); i++) {
+//			JSONObject med = meds.getJSONObject(i);
+//			String str = med.getString("ypmc");
+//			String prob = med.getString("prob");
+//			System.out.println(str + "\t" + prob);
+//		}
 	}
 	
 	public static void main(String[] args) throws Exception {

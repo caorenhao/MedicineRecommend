@@ -53,7 +53,8 @@ public class MRecommendController extends ApplicationController {
 			}
 		}
 		
-		JSONArray ret = IYQFrontConst.mRecommendYPMCSearch.search(IYQFrontConst.mRecommendCache, 
+		JSONArray ret = IYQFrontConst.mRecommendYPMCSearch.search(
+				IYQFrontConst.mRecommendCache, 
 				Integer.parseInt(icd_name_id), Integer.parseInt(sex), 
 				Integer.parseInt(ageStart), Integer.parseInt(ageEnd), symptom_ids);
 		
