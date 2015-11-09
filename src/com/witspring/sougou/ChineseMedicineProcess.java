@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendConst;
 import com.witspring.util.IOUtil;
 
 public class ChineseMedicineProcess {
@@ -40,7 +40,7 @@ public class ChineseMedicineProcess {
 		List<String> list = new ArrayList<String>();
 		list = IOUtil.readStringListFromFile(new File("c:/crh/work/data/000000_0"), list);
 		for(String str : list) {
-			String[] texts = str.split(MRecommendCost.ATTR_STR);
+			String[] texts = str.split(MRecommendConst.ATTR_STR);
 			pw.println(texts[0]);
 		}
 		IOUtil.forceClose(pw);

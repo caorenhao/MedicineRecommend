@@ -30,7 +30,7 @@ public class MRecommendCache {
 		MRecommendYPMCSearch search = new MRecommendYPMCSearch();
 		List<String> icd_name_ids = new ArrayList<String>();
 		icd_name_ids = IOUtil.readStringListFromFile(new File(
-				MRecommendCost.INIT_ICD_NAME_PATH), icd_name_ids);
+				MRecommendConst.INIT_ICD_NAME_PATH), icd_name_ids);
 		for(String icd_name_id : icd_name_ids) {
 			for(int i = 0; i < 3; i++) {
 				search.search(this, Integer.parseInt(icd_name_id), i, 0, 0, null);

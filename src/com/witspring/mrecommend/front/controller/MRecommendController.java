@@ -7,7 +7,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.witspring.mrecommend.front.IYQFrontConst;
 import com.witspring.mrecommend.front.helper.ControllerParamRules;
 import com.witspring.net.rest.rule.RestParamRuleChecker;
-import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendConst;
 import com.witspring.util.LoggerConfig;
 import com.witspring.util.StrUtil;
 
@@ -49,7 +49,7 @@ public class MRecommendController extends ApplicationController {
 		if(symptoms != null) {
 			symptom_ids = new int[symptoms.length];
 			for(int i = 0; i < symptoms.length; i++) {
-				symptom_ids[i] = MRecommendCost.SymptomIdMap.get(symptoms[i]);
+				symptom_ids[i] = MRecommendConst.SymptomIdMap.get(symptoms[i]);
 			}
 		}
 		

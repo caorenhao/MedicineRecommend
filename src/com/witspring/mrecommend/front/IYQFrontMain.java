@@ -20,7 +20,7 @@ import com.witspring.mrecommend.conf.MRecommendConfig;
 import com.witspring.net.common.WorkingDir;
 import com.witspring.recommend.MRecommendAlgo;
 import com.witspring.recommend.MRecommendCache;
-import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendConst;
 import com.witspring.recommend.MRecommendYPMCSearch;
 import com.witspring.recommend.MRecommendYPMCSearchBySphinxQL;
 import com.witspring.sougou.FileUtil;
@@ -51,46 +51,46 @@ public class IYQFrontMain {
 	 */
 	public void init() throws Exception {
 		// 导入根据疾病ID划分的索引表
-		MRecommendCost.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
+		MRecommendConst.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
 		List<String> indexList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.INDEX_TABLE_PATH), indexList);
+				new File(MRecommendConst.INDEX_ICDNAMEID_PATH), indexList);
 		for(String index : indexList) {
 			String[] strs = index.split(" ");
 			String[] range = strs[0].split(",");
-			MRecommendCost.IndexMap.put(new Pair<Integer, Integer>(
+			MRecommendConst.IndexMap.put(new Pair<Integer, Integer>(
 					Integer.parseInt(range[0]), Integer.parseInt(range[1])), strs[1]);
 		}
 		
 		// 导入症状及对应的症状ID表
-		MRecommendCost.SymptomIdMap = new HashMap<String, Integer>();
+		MRecommendConst.SymptomIdMap = new HashMap<String, Integer>();
 		List<String> symptomList = new ArrayList<String>();
 		symptomList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.SYMPTOM_TABLE_PATH), symptomList);
+				new File(MRecommendConst.SYMPTOM_TABLE_PATH), symptomList);
 		for(String index : symptomList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
 		}
 		
 		// 导入中药材词典(过滤(补充过滤,在进索引时已经进行过初步过滤了)推荐药品中的中药材)
-		MRecommendCost.ChineseMedicineMap = new HashMap<String, Integer>();
+		MRecommendConst.ChineseMedicineMap = new HashMap<String, Integer>();
 		List<String> chineseMedicineList = new ArrayList<String>();
 		chineseMedicineList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.CHINESE_MEDICINE_PATH), chineseMedicineList);
+				new File(MRecommendConst.CHINESE_MEDICINE_PATH), chineseMedicineList);
 		for(String chineseMedicine : chineseMedicineList) {
-			MRecommendCost.ChineseMedicineMap.put(chineseMedicine, 1);
+			MRecommendConst.ChineseMedicineMap.put(chineseMedicine, 1);
 		}
 		
 		// 导入药品疾病关系表
 		Map<String, Map<Integer, Double>> ypmcDiseaseCorrTempMap = 
 				new HashMap<String, Map<Integer,Double>>();
-		MRecommendCost.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
+		MRecommendConst.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
 		List<String> list = new ArrayList<String>();
-		List<File> paths = FileUtil.getAllFiles(MRecommendCost.YPMC_DISEASE_ROOT_PATH);
+		List<File> paths = FileUtil.getAllFiles(MRecommendConst.YPMC_DISEASE_ROOT_PATH);
 		for(File file : paths) {
 			list = IOUtil.readStringListFromFile(file, list);
 			for(String str : list) {
-				String[] strs = str.split(MRecommendCost.ATTR_STR);
+				String[] strs = str.split(MRecommendConst.ATTR_STR);
 				
 				Map<Integer, Double> temp = new HashMap<Integer, Double>();
 				if(ypmcDiseaseCorrTempMap.containsKey(strs[1]))
@@ -104,28 +104,28 @@ public class IYQFrontMain {
 			List<Map.Entry<Integer, Double>> tempList = 
 					MRecommendAlgo.sortIntDoubleDesc(entry.getValue());
 			Map<Integer, Double> tempMap = new HashMap<Integer, Double>();
-			int length = tempList.size() > MRecommendCost.YPMC_DISEASE_RANK ? 
-				MRecommendCost.YPMC_DISEASE_RANK : tempList.size();
+			int length = tempList.size() > MRecommendConst.YPMC_DISEASE_RANK ? 
+				MRecommendConst.YPMC_DISEASE_RANK : tempList.size();
 			for(int i = 0; i < length; i++) {
 				tempMap.put(tempList.get(i).getKey(), tempList.get(i).getValue());
 			}
-			MRecommendCost.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
+			MRecommendConst.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
 		}
 		
 		// 初始化Sphinx的配置
 		conf = ConfigSingleton.getMRecommendConfig();
-		MRecommendCost.SphinxIP = conf.sphinxConf.server;
-		MRecommendCost.SphinxPort = conf.sphinxConf.port;
-		MRecommendCost.SphinxPortYpmcDisease = conf.sphinxConf.portYpmcDisease;
-		LOGGER.info("Use Sphinx " + MRecommendCost.SphinxIP + ":" 
-				+ MRecommendCost.SphinxPort + "," + MRecommendCost.SphinxPortYpmcDisease);
+		MRecommendConst.SphinxIP = conf.sphinxConf.server;
+		MRecommendConst.SphinxPort = conf.sphinxConf.port;
+		MRecommendConst.SphinxPortYpmcDisease = conf.sphinxConf.portYpmcDisease;
+		LOGGER.info("Use Sphinx " + MRecommendConst.SphinxIP + ":" 
+				+ MRecommendConst.SphinxPort + "," + MRecommendConst.SphinxPortYpmcDisease);
 		
 		// 初始化参数
-		MRecommendCost.SPHINX_MAX_QUERYS = conf.paramConf.sphinx_max_query;
-		MRecommendCost.SPHINX_TIMEOUT = conf.paramConf.sphinx_timeout;
-		MRecommendCost.SPHINX_YPSL = conf.paramConf.sphinx_ypsl;
-		MRecommendCost.YPSL = conf.paramConf.ypsl;
-		MRecommendCost.YPMC_DISEASE_RANK = conf.paramConf.ypmc_disease_rank;
+		MRecommendConst.SPHINX_MAX_QUERYS = conf.paramConf.sphinx_max_query;
+		MRecommendConst.SPHINX_TIMEOUT = conf.paramConf.sphinx_timeout;
+		MRecommendConst.SPHINX_YPSL = conf.paramConf.sphinx_ypsl;
+		MRecommendConst.YPSL = conf.paramConf.ypsl;
+		MRecommendConst.YPMC_DISEASE_RANK = conf.paramConf.ypmc_disease_rank;
 		
 		IYQFrontConst.mRecommendYPMCSearch = new MRecommendYPMCSearch();
 		IYQFrontConst.mRecommendYPMCSearchBySphinxQL = new MRecommendYPMCSearchBySphinxQL();

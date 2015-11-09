@@ -30,20 +30,20 @@ public class MedicineSearch {
 	 * @throws Exception
 	 */
 	public static void init() throws Exception {
-		MRecommendCost.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
+		MRecommendConst.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
 		List<String> indexList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.INDEX_TABLE_PATH), indexList);
+				new File(MRecommendConst.INDEX_ICDNAMEID_PATH), indexList);
 		for(String index : indexList) {
 			String[] strs = index.split(" ");
 			String[] range = strs[0].split(",");
-			MRecommendCost.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
+			MRecommendConst.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
 					Integer.parseInt(range[1])), strs[1]);
 		}
 		
 		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
-		MRecommendCost.SphinxIP = conf.sphinxConf.server;
-		MRecommendCost.SphinxPort = conf.sphinxConf.port;
+		MRecommendConst.SphinxIP = conf.sphinxConf.server;
+		MRecommendConst.SphinxPort = conf.sphinxConf.port;
 	}
 	
 	/**
@@ -54,7 +54,7 @@ public class MedicineSearch {
 	 */
 	private static String getIndex(int icd_name_id) {
 		String index = "";
-		for(Map.Entry<Pair<Integer, Integer>, String> entry : MRecommendCost.IndexMap.entrySet()) {
+		for(Map.Entry<Pair<Integer, Integer>, String> entry : MRecommendConst.IndexMap.entrySet()) {
 			if(icd_name_id >= entry.getKey().first && icd_name_id < entry.getKey().second)
 				index = entry.getValue();
 		}
@@ -79,7 +79,7 @@ public class MedicineSearch {
         
         List<String> ret = new ArrayList<String>();
         try {
-			cl.SetServer (MRecommendCost.SphinxIP, MRecommendCost.SphinxPort);
+			cl.SetServer (MRecommendConst.SphinxIP, MRecommendConst.SphinxPort);
 	        cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
 //	        cl.SetRankingMode(SphinxClient.SPH_RANK_EXPR,
 //	        		"doc_word_count*1000 + (sum(hit_count)/(sum(hit_count)+doc_word_count))*1000");

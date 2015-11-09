@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.sphx.api.SphinxClient;
 import org.sphx.api.SphinxException;
@@ -19,40 +20,40 @@ import com.witspring.util.StrUtil;
 public class MRecommendIcdnameSearch {
 
 	public static void init() throws Exception {
-		MRecommendCost.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
+		MRecommendConst.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
 		List<String> indexList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.INDEX_TABLE_PATH), indexList);
+				new File(MRecommendConst.INDEX_ICDNAMEID_PATH), indexList);
 		for(String index : indexList) {
 			String[] strs = index.split(" ");
 			String[] range = strs[0].split(",");
-			MRecommendCost.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
+			MRecommendConst.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
 					Integer.parseInt(range[1])), strs[1]);
 		}
 		
 		// 初始化疾病及疾病对应ID表
-		MRecommendCost.IcdNameIdMap = new HashMap<Integer, String>();
+		MRecommendConst.IcdNameIdMap = new HashMap<Integer, String>();
 		List<String> icdNameList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.ICDNAME_TABLE_PATH), icdNameList);
+				new File(MRecommendConst.ICDNAME_TABLE_PATH), icdNameList);
 		for(String index : indexList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
 		}
 		
 		// 初始化症状及症状对应ID表
-		MRecommendCost.SymptomIdMap = new HashMap<String, Integer>();
+		MRecommendConst.SymptomIdMap = new HashMap<String, Integer>();
 		List<String> symptomList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
 				new File("./data/index/t_qb_zyzd_jieba_4_1.txt"), symptomList);
 		for(String index : symptomList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
 		}
 		
 		MRecommendConfig conf = ConfigSingleton.getMRecommendConfig();
-		MRecommendCost.SphinxIP = conf.sphinxConf.server;
-		MRecommendCost.SphinxPort = 9612;
+		MRecommendConst.SphinxIP = conf.sphinxConf.server;
+		MRecommendConst.SphinxPort = 9612;
 	}
 	
 	/**
@@ -70,10 +71,10 @@ public class MRecommendIcdnameSearch {
         
         List<String> ret = new ArrayList<String>();
         try {
-        	cl.SetServer (MRecommendCost.SphinxIP, MRecommendCost.SphinxPort);
+        	cl.SetServer (MRecommendConst.SphinxIP, MRecommendConst.SphinxPort);
 	        cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
 	        cl.SetLimits (0, 20);
-	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        cl.SetConnectTimeout(MRecommendConst.SPHINX_TIMEOUT);
 	        
 	        // 过滤条件
 	        if(sex != 0)
@@ -97,9 +98,10 @@ public class MRecommendIcdnameSearch {
 	        SphinxResult res = cl.Query("", index);
 	        
 	        if(res != null) {
+	        	Map<Integer, String> icdNameIdMap = MRecommendConst.IcdNameIdMap;
 		        for (int j=0; j<res.matches.length; j++){
 		            SphinxMatch info = res.matches[j];
-		            String icd_name = MRecommendCost.IcdNameIdMap.get(
+		            String icd_name = icdNameIdMap.get(
 		            		Integer.parseInt(info.attrValues.get(0).toString()));
 		            System.out.println(icd_name + "\t" + info.attrValues.get(1));
 		            ret.add(icd_name);
@@ -138,8 +140,8 @@ public class MRecommendIcdnameSearch {
 		int ageEnd = 60;
 		int[] symptom_ids = new int[symptoms.length];
 		for(int i = 0; i < symptoms.length; i++) {
-			if(MRecommendCost.SymptomIdMap.containsKey(symptoms[i]))
-				symptom_ids[i] = MRecommendCost.SymptomIdMap.get(symptoms[i]);
+			if(MRecommendConst.SymptomIdMap.containsKey(symptoms[i]))
+				symptom_ids[i] = MRecommendConst.SymptomIdMap.get(symptoms[i]);
 		}
 		
 		long start1 = System.currentTimeMillis();

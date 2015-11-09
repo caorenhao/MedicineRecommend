@@ -2,7 +2,7 @@ package com.witspring.common;
 
 import java.io.File;
 
-import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendConst;
 import com.witspring.util.OSUtil;
 
 /**
@@ -38,7 +38,7 @@ public final class ProcessCtr {
 			diclRoot = "C:/crh/work/code/MedicineRecommend";
 			//System.out.println(diclRoot);
 		} else {
-			diclRoot = MRecommendCost.PROGRAM_PATH;
+			diclRoot = MRecommendConst.PROGRAM_PATH;
 		}
 		return new File(diclRoot);
 	}

@@ -17,13 +17,13 @@ public class PressureTest { //用于管理线程和提供线程服务的类
 	public PressureTest() throws Exception {
 		List<String> indexList = new ArrayList<String>();
 		// 初始化疾病及疾病对应ID表
-		MRecommendCost.IcdNameMap = new HashMap<String, Integer>();
+		MRecommendConst.IcdNameMap = new HashMap<String, Integer>();
 		List<String> icdNameList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.ICDNAME_TABLE_PATH), icdNameList);
+				new File(MRecommendConst.ICDNAME_TABLE_PATH), icdNameList);
 		for(String index : indexList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.IcdNameMap.put(strs[0], Integer.parseInt(strs[1]));
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.IcdNameMap.put(strs[0], Integer.parseInt(strs[1]));
 		}
 		
 		exe = Executors.newFixedThreadPool(POOL_SIZE);//创建线程池
@@ -47,8 +47,8 @@ public class PressureTest { //用于管理线程和提供线程服务的类
 			try {
 				SearchTest search = new SearchTest();
 				String icd_name = "高血压";
-				if(MRecommendCost.IcdNameMap.containsKey(icd_name)) {
-					int icd_name_id = MRecommendCost.IcdNameMap.get(icd_name);
+				if(MRecommendConst.IcdNameMap.containsKey(icd_name)) {
+					int icd_name_id = MRecommendConst.IcdNameMap.get(icd_name);
 					Random rand = new Random();
 					icd_name_id = rand.nextInt(10000);
 					long start = System.currentTimeMillis();

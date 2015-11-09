@@ -13,7 +13,7 @@ import java.util.Map;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.witspring.db.mysql.SphinxQLManager;
-import com.witspring.recommend.MRecommendCost;
+import com.witspring.recommend.MRecommendConst;
 import com.witspring.sougou.FileUtil;
 import com.witspring.util.IOUtil;
 import com.witspring.util.Pair;
@@ -28,57 +28,57 @@ public class MRecommendYPMCSearchBySphinxQL {
 		dbManager = SphinxQLManager.getInstance();
 		
 		// 导入根据疾病ID划分的索引表
-		MRecommendCost.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
+		MRecommendConst.IndexMap = new HashMap<Pair<Integer, Integer>, String>();
 		List<String> indexList = new ArrayList<String>();
 		indexList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.INDEX_TABLE_PATH), indexList);
+				new File(MRecommendConst.INDEX_ICDNAMEID_PATH), indexList);
 		for(String index : indexList) {
 			String[] strs = index.split(" ");
 			String[] range = strs[0].split(",");
-			MRecommendCost.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
+			MRecommendConst.IndexMap.put(new Pair<Integer, Integer>(Integer.parseInt(range[0]), 
 					Integer.parseInt(range[1])), strs[1]);
 		}
 		
 		// 导入疾病及对应的疾病ID表
-		MRecommendCost.IcdNameIdMap = new HashMap<Integer, String>();
+		MRecommendConst.IcdNameIdMap = new HashMap<Integer, String>();
 		List<String> icdNameList = new ArrayList<String>();
 		icdNameList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.ICDNAME_TABLE_PATH), icdNameList);
+				new File(MRecommendConst.ICDNAME_TABLE_PATH), icdNameList);
 		for(String index : icdNameList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
 		}
 		
 		// 导入症状及对应的症状ID表
-		MRecommendCost.SymptomIdMap = new HashMap<String, Integer>();
+		MRecommendConst.SymptomIdMap = new HashMap<String, Integer>();
 		List<String> symptomList = new ArrayList<String>();
 		symptomList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.SYMPTOM_TABLE_PATH), symptomList);
+				new File(MRecommendConst.SYMPTOM_TABLE_PATH), symptomList);
 		for(String index : symptomList) {
-			String[] strs = index.split(MRecommendCost.ATTR_STR);
-			MRecommendCost.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
 		}
 		
 		// 导入中药材词典(过滤(补充过滤,在进索引时已经进行过初步过滤了)推荐药品中的中药材)
-		MRecommendCost.ChineseMedicineMap = new HashMap<String, Integer>();
+		MRecommendConst.ChineseMedicineMap = new HashMap<String, Integer>();
 		List<String> chineseMedicineList = new ArrayList<String>();
 		chineseMedicineList = IOUtil.readStringListFromFile(
-				new File(MRecommendCost.CHINESE_MEDICINE_PATH), chineseMedicineList);
+				new File(MRecommendConst.CHINESE_MEDICINE_PATH), chineseMedicineList);
 		for(String chineseMedicine : chineseMedicineList) {
-			MRecommendCost.ChineseMedicineMap.put(chineseMedicine, 1);
+			MRecommendConst.ChineseMedicineMap.put(chineseMedicine, 1);
 		}
 		
 		// 导入药品疾病关系表
 		Map<String, Map<Integer, Double>> ypmcDiseaseCorrTempMap = 
 				new HashMap<String, Map<Integer,Double>>();
-		MRecommendCost.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
+		MRecommendConst.ypmcDiseaseCorrMap = new HashMap<String, Map<Integer,Double>>();
 		String inputPath = "./data/dict/t_qb_zyzd_ypmc_3/";
 		List<String> list = new ArrayList<String>();
 		List<File> paths = FileUtil.getAllFiles(inputPath);
 		for(File file : paths) {
 			list = IOUtil.readStringListFromFile(file, list);
 			for(String str : list) {
-				String[] strs = str.split(MRecommendCost.ATTR_STR);
+				String[] strs = str.split(MRecommendConst.ATTR_STR);
 				
 				Map<Integer, Double> temp = new HashMap<Integer, Double>();
 				if(ypmcDiseaseCorrTempMap.containsKey(strs[1]))
@@ -93,12 +93,12 @@ public class MRecommendYPMCSearchBySphinxQL {
 			List<Map.Entry<Integer, Double>> tempList = 
 					MRecommendAlgo.sortIntDoubleDesc(entry.getValue());
 			Map<Integer, Double> tempMap = new HashMap<Integer, Double>();
-			int length = tempList.size() > MRecommendCost.YPMC_DISEASE_RANK ? 
-				MRecommendCost.YPMC_DISEASE_RANK : tempList.size();
+			int length = tempList.size() > MRecommendConst.YPMC_DISEASE_RANK ? 
+				MRecommendConst.YPMC_DISEASE_RANK : tempList.size();
 			for(int i = 0; i < length; i++) {
 				tempMap.put(tempList.get(i).getKey(), tempList.get(i).getValue());
 			}
-			MRecommendCost.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
+			MRecommendConst.ypmcDiseaseCorrMap.put(entry.getKey(), tempMap);
 		}
 	}
 	
@@ -110,7 +110,8 @@ public class MRecommendYPMCSearchBySphinxQL {
 	 */
 	private static String getIndex(int icd_name_id) {
 		String index = "";
-		for(Map.Entry<Pair<Integer, Integer>, String> entry : MRecommendCost.IndexMap.entrySet()) {
+		Map<Pair<Integer, Integer>, String> indexMap = MRecommendConst.IndexMap;
+		for(Map.Entry<Pair<Integer, Integer>, String> entry : indexMap.entrySet()) {
 			if(icd_name_id >= entry.getKey().first && icd_name_id < entry.getKey().second)
 				index = entry.getValue();
 		}
@@ -136,7 +137,7 @@ public class MRecommendYPMCSearchBySphinxQL {
 			.append(" WHERE").append(sbWhere.toString())
 			.append(" GROUP BY ypmc WITHIN GROUP ORDER BY weight() desc ")
 			.append("ORDER BY cnt desc LIMIT ")
-			.append("0,").append(MRecommendCost.SPHINX_YPSL)
+			.append("0,").append(MRecommendConst.SPHINX_YPSL)
 			.append(" OPTION ranker=proximity");
 		
 		System.out.println(sb.toString());
@@ -145,7 +146,9 @@ public class MRecommendYPMCSearchBySphinxQL {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		Connection conn = dbManager.getConnection();
-	    try {
+		Map<String, Integer> chineseMedicineMap = MRecommendConst.ChineseMedicineMap;
+	    Map<String, Map<Integer, Double>> ypmcDiseaseCorrMap = MRecommendConst.ypmcDiseaseCorrMap;
+		try {
 	    	st = conn.prepareStatement(sb.toString());
 	    	rs = st.executeQuery();
 	    	List<Pair<String, Integer>> ypmcs = new ArrayList<Pair<String, Integer>>();
@@ -153,7 +156,7 @@ public class MRecommendYPMCSearchBySphinxQL {
 				String ypmc = rs.getString(1);
 				int cnt = Integer.parseInt(rs.getString(2));
 				// 将中药材进行补充过滤
-	            if(!MRecommendCost.ChineseMedicineMap.containsKey(ypmc)) {
+	            if(!chineseMedicineMap.containsKey(ypmc)) {
             		// 将与该疾病相关度不高的药品过滤
 	            	ypmcs.add(new Pair<String, Integer>(ypmc, cnt));
 	            }
@@ -163,17 +166,17 @@ public class MRecommendYPMCSearchBySphinxQL {
         	if(ageEnd == 0) {
         		for(Pair<String, Integer> ypmc : ypmcs) {
         			// 如果数量达到返回数量值，则直接返回
-        			if(ret.size() >= MRecommendCost.YPSL)
+        			if(ret.size() >= MRecommendConst.YPSL)
         				break;
-        			if(MRecommendCost.ypmcDiseaseCorrMap.containsKey(ypmc.first)) {
-        				Map<Integer, Double> temp = MRecommendCost
-        						.ypmcDiseaseCorrMap.get(ypmc.first);
+        			if(ypmcDiseaseCorrMap.containsKey(ypmc.first)) {
+        				Map<Integer, Double> temp = ypmcDiseaseCorrMap
+        						.get(ypmc.first);
         				if(temp.containsKey(icd_name_id))
         					ret.add(ypmc);
         			}
         		}
         	} else {
-        		for(int i = 0; i < ypmcs.size() && ret.size() < MRecommendCost.YPSL; i++) {
+        		for(int i = 0; i < ypmcs.size() && ret.size() < MRecommendConst.YPSL; i++) {
         			ret.add(ypmcs.get(i));
         		}
         	}
@@ -273,7 +276,7 @@ public class MRecommendYPMCSearchBySphinxQL {
 		if(symptoms != null) {
 			symptom_ids = new int[symptoms.length];
 			for(int i = 0; i < symptoms.length; i++) {
-				symptom_ids[i] = MRecommendCost.SymptomIdMap.get(symptoms[i]);
+				symptom_ids[i] = MRecommendConst.SymptomIdMap.get(symptoms[i]);
 			}
 		}
 		long start = System.currentTimeMillis();
@@ -283,7 +286,7 @@ public class MRecommendYPMCSearchBySphinxQL {
 			JSONObject med = ret.getJSONObject(i);
 			String str = med.getString("ypmc");
 			String prob = med.getString("prob");
-			System.out.println(MRecommendCost.IcdNameIdMap.get(icd_name_id) + "\t" + str + "\t" + prob);
+			System.out.println(MRecommendConst.IcdNameIdMap.get(icd_name_id) + "\t" + str + "\t" + prob);
 		}
 		long end = System.currentTimeMillis();
 		System.out.println("推荐共用时：" + (end-start) + "ms");

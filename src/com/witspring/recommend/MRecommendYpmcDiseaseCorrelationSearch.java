@@ -17,15 +17,15 @@ public class MRecommendYpmcDiseaseCorrelationSearch {
 		boolean flag = false;
 		SphinxClient cl = new SphinxClient();
         try {
-        	cl.SetServer (MRecommendCost.SphinxIP, MRecommendCost.SphinxPortYpmcDisease);
+        	cl.SetServer (MRecommendConst.SphinxIP, MRecommendConst.SphinxPortYpmcDisease);
 			cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
-	        cl.SetLimits (0, MRecommendCost.YPMC_DISEASE_RANK);
-	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        cl.SetLimits (0, MRecommendConst.YPMC_DISEASE_RANK);
+	        cl.SetConnectTimeout(MRecommendConst.SPHINX_TIMEOUT);
 	        
 	        // 过滤条件
 	        cl.SetFilter("icd_name_id", icd_name_id, false);
 	        cl.SetFilter("ypmc_id", CRC32.getCRC32(ypmc), false);
-	        cl.SetFilterRange("rank", 1, MRecommendCost.YPMC_DISEASE_RANK, false);
+	        cl.SetFilterRange("rank", 1, MRecommendConst.YPMC_DISEASE_RANK, false);
         	
 	        SphinxResult res = cl.Query("", "index");
 	        if(res != null) {
@@ -59,17 +59,17 @@ public class MRecommendYpmcDiseaseCorrelationSearch {
 		boolean[] flags = new boolean[ypmcs.length];
 		SphinxClient cl = new SphinxClient();
         try {
-        	cl.SetServer (MRecommendCost.SphinxIP, MRecommendCost.SphinxPortYpmcDisease);
+        	cl.SetServer (MRecommendConst.SphinxIP, MRecommendConst.SphinxPortYpmcDisease);
 			cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
-	        cl.SetLimits (0, MRecommendCost.YPMC_DISEASE_RANK);
-	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        cl.SetLimits (0, MRecommendConst.YPMC_DISEASE_RANK);
+	        cl.SetConnectTimeout(MRecommendConst.SPHINX_TIMEOUT);
 	        
 	        for(int i = 0; i < ypmcs.length; i++) {
 	        	int ypmc_id = CRC32.getCRC32(ypmcs[i]);
 	        	cl.ResetFilters();
 				cl.SetFilter("ypmc_id", ypmc_id, false);
 				cl.SetFilter("icd_name_id", icd_name_id, false);
-		        cl.SetFilterRange("rank", 1, MRecommendCost.YPMC_DISEASE_RANK, false);
+		        cl.SetFilterRange("rank", 1, MRecommendConst.YPMC_DISEASE_RANK, false);
 	        	cl.AddQuery("", "index", "");
 	        }
 	        SphinxResult[] res = cl.RunQueries();
@@ -104,17 +104,17 @@ public class MRecommendYpmcDiseaseCorrelationSearch {
 		boolean[] flags = new boolean[ypmcs.size()];
 		SphinxClient cl = new SphinxClient();
         try {
-        	cl.SetServer(MRecommendCost.SphinxIP, MRecommendCost.SphinxPortYpmcDisease);
+        	cl.SetServer(MRecommendConst.SphinxIP, MRecommendConst.SphinxPortYpmcDisease);
 			cl.SetMatchMode(SphinxClient.SPH_MATCH_EXTENDED2);
-	        cl.SetLimits(0, MRecommendCost.YPMC_DISEASE_RANK);
-	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        cl.SetLimits(0, MRecommendConst.YPMC_DISEASE_RANK);
+	        cl.SetConnectTimeout(MRecommendConst.SPHINX_TIMEOUT);
 	        
 	        for(int i = 0; i < ypmcs.size(); i++) {
 	        	int ypmc_id = CRC32.getCRC32(ypmcs.get(i).first);
 	        	cl.ResetFilters();
 				cl.SetFilter("ypmc_id", ypmc_id, false);
 				cl.SetFilter("icd_name_id", icd_name_id, false);
-		        cl.SetFilterRange("rank", 1, MRecommendCost.YPMC_DISEASE_RANK, false);
+		        cl.SetFilterRange("rank", 1, MRecommendConst.YPMC_DISEASE_RANK, false);
 	        	cl.AddQuery("", "index", "");
 	        }
 	        SphinxResult[] res = cl.RunQueries();
@@ -148,14 +148,14 @@ public class MRecommendYpmcDiseaseCorrelationSearch {
 		boolean flag = false;
 		SphinxClient cl = new SphinxClient();
         try {
-        	cl.SetServer (MRecommendCost.SphinxIP, MRecommendCost.SphinxPortYpmcDisease);
+        	cl.SetServer (MRecommendConst.SphinxIP, MRecommendConst.SphinxPortYpmcDisease);
 			cl.SetMatchMode (SphinxClient.SPH_MATCH_EXTENDED2);
-	        cl.SetLimits (0, MRecommendCost.YPMC_DISEASE_RANK);
-	        cl.SetConnectTimeout(MRecommendCost.SPHINX_TIMEOUT);
+	        cl.SetLimits (0, MRecommendConst.YPMC_DISEASE_RANK);
+	        cl.SetConnectTimeout(MRecommendConst.SPHINX_TIMEOUT);
 	        
 	        // 过滤条件
 	        cl.SetFilter("ypmc_id", CRC32.getCRC32(ypmc), false);
-	        cl.SetFilterRange("rank", 1, MRecommendCost.YPMC_DISEASE_RANK, false);
+	        cl.SetFilterRange("rank", 1, MRecommendConst.YPMC_DISEASE_RANK, false);
 	        
 	        String query = "\"" + icd_name + "\"";
 	        SphinxResult res = cl.Query(query, "index");
@@ -183,8 +183,8 @@ public class MRecommendYpmcDiseaseCorrelationSearch {
 	
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
-		MRecommendCost.SphinxIP = "192.168.0.171";
-		MRecommendCost.SphinxPortYpmcDisease = 9512;
+		MRecommendConst.SphinxIP = "192.168.0.171";
+		MRecommendConst.SphinxPortYpmcDisease = 9512;
 		
 //		String[] strs = {"盐酸金霉素眼膏", "磺胺醋酰钠滴眼液", "复方甲氧那明胶囊", 
 //				"孟鲁司特钠片", "三拗片", "氯雷他定片", "盐酸氨溴索片", "阿奇霉素颗粒", 

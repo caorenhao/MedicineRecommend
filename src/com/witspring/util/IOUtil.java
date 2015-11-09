@@ -35,19 +35,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 
-/**
- * IO操作类.
- *
- * @author renhao.cao.
- *         Created 2015年2月2日.
- */
 public final class IOUtil {
 
-	/**
-	 * 流操作关闭.
-	 *
-	 * @param stream
-	 */
 	public static void forceClose(Closeable stream) {
 		if(stream == null)
 			return;
@@ -248,6 +237,34 @@ public final class IOUtil {
 		BufferedReader br = null;
 		try {
 			br = openBR(file);
+			if(output == null)
+				output = new ArrayList<String>();
+			String line;
+			while(true) {
+				line = br.readLine();
+				if(line == null)
+					break;
+				output.add(line);
+			}			
+			return output;
+		} catch(Exception e) { throw e; 
+		} finally { forceClose(br); }
+	}
+	
+	/**
+	 * Read Line By Line From the specified file
+	 * @param file the source file
+	 * @param output output list, create one if null
+	 * @return output String list
+	 * @throws Exception
+	 */
+	public static List<String> readStringListFromFile(File file, 
+			List<String> output, String charset) throws Exception {
+		InputStreamReader isr = new InputStreamReader(new FileInputStream(file), 
+				charset);
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(isr);
 			if(output == null)
 				output = new ArrayList<String>();
 			String line;
