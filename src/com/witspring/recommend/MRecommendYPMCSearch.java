@@ -370,11 +370,11 @@ public class MRecommendYPMCSearch {
 		MRecommendCache cache = new MRecommendCache();
 		//search.outputAllIcdYpmcSearch();
 		
-		int icd_name_id = 19887;
+		int icd_name_id = 21598;
 		int sex = 0;
 		int ageStart = 10;
 		int ageEnd = 0;
-		String[] symptoms = null;
+		String[] symptoms = {"咳嗽", "流涕"};
 		int[] symptom_ids = null;
 		if(symptoms != null) {
 			symptom_ids = new int[symptoms.length];

@@ -17,7 +17,7 @@ import java.util.Map.Entry;
  * 
  * 
  * **/
-public class ParseSogo {
+public class ParseSougou {
    
 	/**
 	 * 读取scel的词库文件
