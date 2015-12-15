@@ -38,7 +38,7 @@ public class PressureTest { //用于管理线程和提供线程服务的类
 		}
 	}
  
-	class Worker implements Runnable { //工作线程，线程要完成的工作在此类中实现  
+	class Worker implements Runnable {
 		int id;
 		Worker(int id) {
 			this.id = id;
@@ -50,7 +50,7 @@ public class PressureTest { //用于管理线程和提供线程服务的类
 				if(MRecommendConst.IcdNameMap.containsKey(icd_name)) {
 					int icd_name_id = MRecommendConst.IcdNameMap.get(icd_name);
 					Random rand = new Random();
-					icd_name_id = rand.nextInt(10000);
+					icd_name_id = rand.nextInt(60000);
 					long start = System.currentTimeMillis();
 					search.search(icd_name_id, 0, 0, 0, "");
 					long end = System.currentTimeMillis();
@@ -64,9 +64,9 @@ public class PressureTest { //用于管理线程和提供线程服务的类
 			}
 			//System.out.println("task " + id + ":start");//具体要做的事
 		}
-	} 
+	}
  
 	public static void main(String[] args) throws Exception {
-		new PressureTest().server(100);
+		new PressureTest().server(200);
 	}
 }

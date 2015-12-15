@@ -11,12 +11,23 @@ import org.sphx.api.SphinxException;
 import org.sphx.api.SphinxMatch;
 import org.sphx.api.SphinxResult;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.witspring.util.IOUtil;
-import com.witspring.util.Pair;
 
 public class MRecommendSymptomsDiseaseSearch {
 
 	public MRecommendSymptomsDiseaseSearch() throws Exception {
+		// 导入疾病ID及对应的疾病名称表
+		MRecommendConst.IcdNameIdMap = new HashMap<Integer, String>();
+		List<String> icdNameList = new ArrayList<String>();
+		icdNameList = IOUtil.readStringListFromFile(
+				new File(MRecommendConst.ICDNAME_TABLE_PATH), icdNameList);
+		for(String index : icdNameList) {
+			String[] strs = index.split(MRecommendConst.ATTR_STR);
+			MRecommendConst.IcdNameIdMap.put(Integer.parseInt(strs[1]), strs[0]);
+		}
+		
 		// 导入症状及对应的症状ID表
 		MRecommendConst.SymptomIdMap = new HashMap<String, Integer>();
 		MRecommendConst.SymptomIdToNameMap = new HashMap<Integer, String>();
@@ -28,14 +39,11 @@ public class MRecommendSymptomsDiseaseSearch {
 			MRecommendConst.SymptomIdMap.put(strs[0], Integer.parseInt(strs[1]));
 			MRecommendConst.SymptomIdToNameMap.put(Integer.parseInt(strs[1]), strs[0]);
 		}
-		
-		MRecommendConst.SphinxIP = "192.168.0.171";
-		MRecommendConst.SphinxPort = 9612;
 	}
 	
-	public static List<Pair<String, Integer>> searchYpmc_mva(int mainSymptomId, 
-			int sex, int ageStart, int ageEnd, int[] symptoms) {
-        List<Pair<String, Integer>> ret = new ArrayList<Pair<String, Integer>>();
+	public JSONArray searchDiseases(int sex, int ageStart, int ageEnd, 
+			int[] symptoms) {
+        JSONArray ret = new JSONArray();
         SphinxClient cl = new SphinxClient();
         try {
 			cl.SetServer(MRecommendConst.SphinxIP, MRecommendConst.SphinxPort);
@@ -76,15 +84,16 @@ public class MRecommendSymptomsDiseaseSearch {
 	        	for (int i = 0; i < res.matches.length; i++){
 		            SphinxMatch info = res.matches[i];
 		            
-		            int symptom_id = Integer.parseInt(info.attrValues.get(1).toString());
-		            if(!filter.containsKey(symptom_id)) {
-		            	String symptom = MRecommendConst.SymptomIdToNameMap.get(symptom_id);
-		            	System.out.println(symptom + "\t" + symptom_id 
-		            			+ "\t" + info.attrValues.get(0));
-		            }
+		            int icd_name_id = Integer.parseInt(info.attrValues.get(1).toString());
+		            String icd_name = MRecommendConst.IcdNameIdMap.get(icd_name_id);
+	            	JSONObject obj = new JSONObject();
+		        	obj.put("icd_name", icd_name);
+	            	obj.put("cnt", info.attrValues.get(0));
+	            	ret.add(obj);
 		        }
 	        } else {
 	        	System.out.println("无查询结果");
+	        	return null;
 	        }
 		} catch (SphinxException ex) {
 			ex.printStackTrace();
@@ -103,10 +112,12 @@ public class MRecommendSymptomsDiseaseSearch {
 	
 	public static void main(String[] args) throws Exception {
 		MRecommendSymptomsDiseaseSearch test = new MRecommendSymptomsDiseaseSearch();
+		MRecommendConst.SphinxIP = "192.168.0.171";
+		MRecommendConst.SphinxPort = 9612;
 		int sex = 0;
-		int ageStart = 10;
-		int ageEnd = 0;
-		String[] symptoms = {"咳嗽", "流涕"};
+		int ageStart = 0;
+		int ageEnd = 15;
+		String[] symptoms = {"月经失调"};
 		int[] symptom_ids = null;
 		if(symptoms != null) {
 			symptom_ids = new int[symptoms.length];
@@ -116,7 +127,7 @@ public class MRecommendSymptomsDiseaseSearch {
 		}
 		
 		long start = System.currentTimeMillis();
-		searchYpmc_mva(0, sex, ageStart, ageEnd, symptom_ids);
+		test.searchDiseases(sex, ageStart, ageEnd, symptom_ids);
 		long end = System.currentTimeMillis();
 		System.out.println("共用时：" + (end-start) + "ms");
 	}
